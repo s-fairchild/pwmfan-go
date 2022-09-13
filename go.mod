@@ -1,4 +1,4 @@
-module github.com/pwmfan-go
+module github.com/s-fairchild/pwmfan-go
 
 go 1.18
 
