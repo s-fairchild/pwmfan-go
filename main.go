@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -30,19 +29,14 @@ func main() {
 	pin.Freq(pwmClockFreq)
 	rpio.StartPwm()
 
-	// var lastDutyLength uint32
 	for {
 		runFan, dutyLength := fan.MonitorCpuTemp(config)
-		// if lastDutyLength != dutyLength {
-		fmt.Printf("Running fan with dutylength of: %v\n", dutyLength)
-		// }
-
 		if runFan {
 			pin.DutyCycleWithPwmMode(dutyLength, 4, true)
 		} else {
 			pin.DutyCycle(0, 0)
 		}
-		time.Sleep(10 * time.Second)
-		// lastDutyLength = dutyLength
+		// sleep for longest amount of time (4 minutes) when temperature is highest
+		time.Sleep(time.Duration(dutyLength) * time.Minute)
 	}
 }

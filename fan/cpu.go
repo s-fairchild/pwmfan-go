@@ -13,6 +13,17 @@ import (
 
 // MonitorCpuTemp calls readCpuTemp and compares the temperature to the configuration thresholds
 // returning a bool to turn the fan on/off, and the duty length when true
+// When falase returns dutylength of 5 for main loop to calculate sleep time
+//
+// dutylength is a fraction of 4
+//
+// dutylength 1 = 1/4 power or 25%
+//
+// dutylength 2 = 2/4 power or 50%
+//
+// dutylength 3 = 3/4 power or 75%
+//
+// dutylength 4 = 4/4 power or 100%
 func MonitorCpuTemp(c settings.Configuration) (bool, uint32) {
 
 	if len(c.Temperatures) < 1 {
@@ -36,7 +47,8 @@ func MonitorCpuTemp(c settings.Configuration) (bool, uint32) {
 		}
 	}
 
-	return false, 0
+	// Prevent endless loop that sleeps for 0 minutes by returning 5
+	return false, 5
 }
 
 // calculateDutyLengthAbs calculates the reversed duty length
