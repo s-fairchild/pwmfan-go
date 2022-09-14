@@ -26,29 +26,30 @@ import (
 // dutylength 4 = 4/4 power or 100%
 func MonitorCpuTemp(c settings.Configuration) (bool, uint32) {
 
+	const defaultSleepTime = 2
+
 	if len(c.Temperatures) < 1 {
 		log.Fatalln("temperatures configuration section must contain 4 values\n Example: \"temperatures\": [ 50, 55, 60, 65 ]")
 	}
 
 	cTemp, err := readCpuTemp()
-	fmt.Printf("Current CPU temperature is %.f\n", cTemp)
+	fmt.Printf("CPU temperature is %.2f\n", cTemp)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	// Requires c.Temperatures to be in descending order
 	for dutyLength, threshold := range c.Temperatures {
-		fmt.Printf("Comparing cpu temperature %v to %v, index: %v\n", uint32(cTemp), threshold, dutyLength)
-		if uint32(cTemp) > threshold {
-			fmt.Printf("%v is greater than threshold %v\n", uint32(cTemp), threshold)
+		if uint32(cTemp) >= threshold {
 			finalDutyLength := calculateDutyLengthAbs(dutyLength, len(c.Temperatures))
+			fmt.Printf("Running fan at %v/4 power\n", finalDutyLength)
 
 			return true, finalDutyLength
 		}
 	}
 
-	// Prevent endless loop that sleeps for 0 minutes by returning 5
-	return false, 5
+	// Prevent endless loop that sleeps for 0 minutes by returning 2
+	return false, defaultSleepTime
 }
 
 // calculateDutyLengthAbs calculates the reversed duty length
@@ -59,7 +60,6 @@ func calculateDutyLengthAbs(dutyLength int, configLength int) uint32 {
 		log.Fatalf("Failed to calculate dutylength absolute value: %v - %v", dutyLength, configLength)
 	}
 
-	fmt.Printf("returning dutylength of: %v\n", dutyLengthAbs)
 	return uint32(dutyLengthAbs)
 }
 

@@ -36,7 +36,7 @@ func main() {
 		} else {
 			pin.DutyCycle(0, 0)
 		}
-		// sleep for longest amount of time (4 minutes) when temperature is highest
+		// sleep for 1-4 minutes before checking temperature again
 		time.Sleep(time.Duration(dutyLength) * time.Minute)
 	}
 }
