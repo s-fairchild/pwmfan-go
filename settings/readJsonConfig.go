@@ -28,4 +28,5 @@ func JsonConfig() Configuration {
 
 type Configuration struct {
 	Pwm_pin	uint32
+	Temperatures [4]uint32
 }
