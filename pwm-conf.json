@@ -1,3 +1,8 @@
 {
-    "pwm_pin": 18
+    "pwm_pin": 18,
+    "temperatures": [
+        55,
+        60,
+        65
+    ]
 }

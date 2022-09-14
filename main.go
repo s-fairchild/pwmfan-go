@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/s-fairchild/pwmfan-go/settings"
+	"github.com/s-fairchild/pwmfan-go/temperature"
 
 	rpio "github.com/stianeikeland/go-rpio/v4"
 )
@@ -16,8 +17,14 @@ const pwmClockFreq = 4 * cycleLength
 func main() {
 
 	config := settings.JsonConfig()
+	cpu, err := temperature.ReadCpuTemp()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	err := rpio.Open()
+	fmt.Printf("CPU temp is: %.2f\n", cpu)
+
+	err = rpio.Open()
 	if err != nil {
 		log.Fatalf("Failed to open memory range in /dev/mem, %v", err)
 	}
@@ -33,7 +40,7 @@ func main() {
 	for _, cycleLength := range cycleLengths {
 		fmt.Printf("Duty cycle=%v\n", cycleLength)
 		pin.DutyCycleWithPwmMode(cycleLength, 4, true)
-		time.Sleep(10 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 	pin.DutyCycle(0, 0)
 }
