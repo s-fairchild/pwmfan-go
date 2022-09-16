@@ -1,0 +1,14 @@
+[Unit]
+Description=PWM Software Fan Driver Written in Go
+
+[Service]
+Type=simple
+TimeoutStartSec=5
+Restart=on-failure
+RestartSec=30s
+Environment=PWMFAN_CONFIG=/usr/local/etc/pwmfan-conf.json
+Environment=PATH=/opt/vc/bin:/usr/bin/
+ExecStart=/usr/local/bin/pwmfan-go
+
+[Install]
+WantedBy=multi-user.target
