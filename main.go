@@ -10,12 +10,17 @@ import (
 	rpio "github.com/stianeikeland/go-rpio/v4"
 )
 
-const cycleLength = 30000
-const pwmClockFreq = 4 * cycleLength
+const (
+	cycleLength      = 30000
+	pwmClockFreq     = 4 * cycleLength
+	configEnv        = "PWMFAN_CONFIG"
+	defaultConfigLoc = "/usr/local/etc/pwmfan-conf.json"
+)
 
 func main() {
 
-	config := settings.JsonConfig()
+	configLoc := settings.GetConfigLocation(configEnv, defaultConfigLoc)
+	config := settings.JsonConfig(configLoc)
 
 	err := rpio.Open()
 	if err != nil {
