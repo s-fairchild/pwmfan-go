@@ -1,10 +1,11 @@
 package fan
 
 import (
-	"log"
+	"fmt"
+	"io"
 	"math"
+	"os"
 	"strconv"
-	"io/ioutil"
 
 	"github.com/s-fairchild/pwmfan-go/settings"
 )
@@ -30,11 +31,23 @@ func MonitorCpuTemp(c settings.Configuration) (bool, uint32, float64) {
 	const defaultSleepTime = 2
 
 	if len(c.Temperatures) < 1 {
-		log.Fatalln("temperatures configuration section must contain 4 values\n Example: \"temperatures\": [ 50, 55, 60, 65 ]")
+		fmt.Printf("temperatures configuration section must contain 4 values\n Example: \"temperatures\": [ 50, 55, 60, 65 ]\n")
+		os.Exit(1)
 	}
 
-	cTemp := calcSysTemperature()
+	file, err := os.Open(sysTemperatureFile)
+	if err != nil {
+		fmt.Printf("Unable to read %v: %v", sysTemperatureFile, err)
+		os.Exit(1)
+	}
 
+	temp, err := readSysTempFile(file)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	cTemp := temp / 1000
+	
 	// Requires c.Temperatures to be in descending order
 	for dutyLength, threshold := range c.Temperatures {
 		if uint32(cTemp) >= threshold {
@@ -52,31 +65,30 @@ func calculateDutyLengthAbs(dutyLength int, configLength int) uint32 {
 
 	dutyLengthAbs := math.Abs(float64((dutyLength - configLength)))
 	if math.IsNaN(dutyLengthAbs) {
-		log.Fatalf("Failed to calculate dutylength absolute value: %v - %v", dutyLength, configLength)
+		fmt.Printf("Failed to calculate dutylength absolute value: %v - %v", dutyLength, configLength)
+		os.Exit(1)
 	}
 
 	return uint32(dutyLengthAbs)
 }
 
-// calcSysTemperature parses the kernel system temperature file into a float
-// and divides by 1000 to convert into celsius temperature precision
-func calcSysTemperature() float64 {
+// readSysTempFile parses the kernel system temperature
+//
+// file is modified to remove new line character and converted to a float
+func readSysTempFile(reader io.Reader) (float64, error) {
 
-	fileBytes, err := ioutil.ReadFile(sysTemperatureFile)
+	contents, err := io.ReadAll(reader)
 	if err != nil {
-		log.Fatalf("Unable to read %v: %v", sysTemperatureFile, err)
+		return 0, err
 	}
-
 
 	// remove line break from string
-	strTempInt := string(fileBytes[:len(fileBytes)-1])
+	strTempInt := string(contents[:len(contents)-1])
 	sysTemp, err := strconv.ParseFloat(strTempInt, 32)
 	if err != nil {
-		log.Fatalf("Unable to parse %v into integer: %v", sysTemp, err)
+		return 0, fmt.Errorf("unable to parse %v into integer: %v", sysTemp, err)
 	}
-
-	finalTempCelsius := sysTemp / 1000
 	
-	return finalTempCelsius
+	return sysTemp, nil
 }
 

@@ -6,7 +6,10 @@ gochecks:
 	go fmt
 	go vet
 
-build: gochecks
+gotests: gochecks
+	go test ./...
+
+build: gotests
 	if [[ ! -d build ]]; then \
 		mkdir build ;\
 	fi ;\
@@ -16,7 +19,7 @@ build: gochecks
 		GOARCH=arm go build -o build/pwmfan . ;\
 	fi ;\
 
-source: gochecks
+source: gotests
 	currentBranch=$$(git branch | grep '*' | tr -d '[:space:]' | tr -d '*') ;\
 	highestTagVer=$$(git tag -l | sort -V) ;\
 	git checkout $$highestTagVer ;\

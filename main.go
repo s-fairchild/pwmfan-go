@@ -20,7 +20,7 @@ const (
 func main() {
 
 	configLoc := settings.GetConfigLocation(configEnv, defaultConfigLoc)
-	config := settings.JsonConfig(configLoc)
+	config := settings.ReadFanConfig(configLoc)
 
 	err := rpio.Open()
 	if err != nil {

@@ -8,7 +8,7 @@ Restart=on-failure
 RestartSec=30s
 Environment=PWMFAN_CONFIG=/usr/local/etc/pwmfan-conf.json
 Environment=PATH=/opt/vc/bin:/usr/bin/
-ExecStart=/usr/local/bin/pwmfan-go
+ExecStart=/usr/local/bin/pwmfan
 
 [Install]
 WantedBy=multi-user.target

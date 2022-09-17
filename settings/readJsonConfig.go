@@ -3,30 +3,40 @@ package settings
 import (
 	"encoding/json"
 	"os"
-	"log"
 	"fmt"
+	"io"
 )
 
-func JsonConfig(configLoc string) Configuration {
+func ReadFanConfig(configLoc string) Configuration {
 
+	fmt.Printf("Attempting to read config file: %v\n", configLoc)
 	file, err := os.Open(configLoc)
 	if err != nil {
-		log.Fatalf("failed to load %v: %v\n", configLoc, err)
+		fmt.Printf("failed to load %v: %v\n", configLoc, err)
+		os.Exit(1)
 	}
 	defer file.Close()
 
-	fmt.Printf("Attempting to read config file: %v\n", configLoc)
-
-	decoder := json.NewDecoder(file)
-	config := Configuration{}
-	err = decoder.Decode(&config)
+	config, err := decodeJsonConfig(file)
 	if err != nil {
-		log.Fatalf("failed to decode %v: %v", configLoc, err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
-
 	fmt.Printf("Successfully loaded config %v as: %v\n", configLoc, config)
 
 	return config
+}
+
+func decodeJsonConfig(file io.Reader) (Configuration, error) {
+
+	decoder := json.NewDecoder(file)
+	config := Configuration{}
+	err := decoder.Decode(&config)
+	if err != nil {
+		return Configuration{}, fmt.Errorf("failed to decode file: %v", err)
+	}
+
+	return config, nil
 }
 
 type Configuration struct {
