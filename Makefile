@@ -10,5 +10,8 @@ build: gochecks
 	if [[ ! -d build ]]; then \
 		mkdir build ;\
 	fi ;\
-	cd build ;\
-	GOARCH=arm go build ../
+	build=$$(scripts/go_change_check.sh build/pwmfan-go); \
+	if [ $$build == "true" ]; then \
+		# tags="-tags placetagshere"; \
+		GOARCH=arm go build -o build/pwmfan . ;\
+	fi ;\
