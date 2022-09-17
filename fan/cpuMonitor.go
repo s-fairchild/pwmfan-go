@@ -1,19 +1,20 @@
 package fan
 
 import (
-	"bytes"
-	"fmt"
 	"log"
 	"math"
-	"os/exec"
 	"strconv"
+	"io/ioutil"
 
 	"github.com/s-fairchild/pwmfan-go/settings"
 )
 
+const sysTemperatureFile = "/sys/class/thermal/thermal_zone0/temp"
+
 // MonitorCpuTemp calls readCpuTemp and compares the temperature to the configuration thresholds
 // returning a bool to turn the fan on/off, and the duty length when true
-// When falase returns dutylength of 5 for main loop to calculate sleep time
+// When false returns dutylength of 5 for main loop to calculate sleep time
+// float64 returned is the cpu temperature
 //
 // dutylength is a fraction of 4
 //
@@ -24,7 +25,7 @@ import (
 // dutylength 3 = 3/4 power or 75%
 //
 // dutylength 4 = 4/4 power or 100%
-func MonitorCpuTemp(c settings.Configuration) (bool, uint32) {
+func MonitorCpuTemp(c settings.Configuration) (bool, uint32, float64) {
 
 	const defaultSleepTime = 2
 
@@ -32,24 +33,18 @@ func MonitorCpuTemp(c settings.Configuration) (bool, uint32) {
 		log.Fatalln("temperatures configuration section must contain 4 values\n Example: \"temperatures\": [ 50, 55, 60, 65 ]")
 	}
 
-	cTemp, err := readCpuTemp()
-	fmt.Printf("CPU temperature is %.2f\n", cTemp)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	cTemp := calcSysTemperature()
 
 	// Requires c.Temperatures to be in descending order
 	for dutyLength, threshold := range c.Temperatures {
 		if uint32(cTemp) >= threshold {
 			finalDutyLength := calculateDutyLengthAbs(dutyLength, len(c.Temperatures))
-			fmt.Printf("Running fan at %v/4 power\n", finalDutyLength)
-
-			return true, finalDutyLength
+			return true, finalDutyLength, cTemp
 		}
 	}
 
 	// Prevent endless loop that sleeps for 0 minutes by returning 2
-	return false, defaultSleepTime
+	return false, defaultSleepTime, cTemp
 }
 
 // calculateDutyLengthAbs calculates the reversed duty length
@@ -63,29 +58,25 @@ func calculateDutyLengthAbs(dutyLength int, configLength int) uint32 {
 	return uint32(dutyLengthAbs)
 }
 
-// readCpuTemp extracts and converts output from vcgencmd
-// extracted float is rounded to nearest value
-func readCpuTemp() (float64, error) {
+// calcSysTemperature parses the kernel system temperature file into a float
+// and divides by 1000 to convert into celsius temperature precision
+func calcSysTemperature() float64 {
 
-	cmd := exec.Command("vcgencmd", "measure_temp")
-
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	err := cmd.Run()
+	fileBytes, err := ioutil.ReadFile(sysTemperatureFile)
 	if err != nil {
-		return 0, fmt.Errorf("error running vcgencmd: %v", err)
+		log.Fatalf("Unable to read %v: %v", sysTemperatureFile, err)
 	}
 
-	output := out.String()
 
-	// Extract temperature substring
-	// example of output that we are slicing for the substring: temp=61.8'C
-	outputSubStr := output[5:len(output)-3]
-	cpuTemp, err := strconv.ParseFloat(outputSubStr, 32)
+	// remove line break from string
+	strTempInt := string(fileBytes[:len(fileBytes)-1])
+	sysTemp, err := strconv.ParseFloat(strTempInt, 32)
 	if err != nil {
-		return 0, fmt.Errorf("failed to parse vcgencmd output: %v", err)
+		log.Fatalf("Unable to parse %v into integer: %v", sysTemp, err)
 	}
 
-	return cpuTemp, nil
+	finalTempCelsius := sysTemp / 1000
+	
+	return finalTempCelsius
 }
+

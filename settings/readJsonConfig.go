@@ -4,19 +4,18 @@ import (
 	"encoding/json"
 	"os"
 	"log"
+	"fmt"
 )
 
 func JsonConfig(configLoc string) Configuration {
 
-	logger := log.Default()
-
 	file, err := os.Open(configLoc)
 	if err != nil {
-		log.Fatalf("failed to load %v: %v", configLoc, err)
+		log.Fatalf("failed to load %v: %v\n", configLoc, err)
 	}
 	defer file.Close()
 
-	logger.Printf("Attempting to read config file: %v", configLoc)
+	fmt.Printf("Attempting to read config file: %v\n", configLoc)
 
 	decoder := json.NewDecoder(file)
 	config := Configuration{}
@@ -25,7 +24,7 @@ func JsonConfig(configLoc string) Configuration {
 		log.Fatalf("failed to decode %v: %v", configLoc, err)
 	}
 
-	logger.Printf("Successfully loaded config %v as: %v\n", configLoc, config)
+	fmt.Printf("Successfully loaded config %v as: %v\n", configLoc, config)
 
 	return config
 }

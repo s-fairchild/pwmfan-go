@@ -1,12 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/s-fairchild/pwmfan-go/fan"
 	"github.com/s-fairchild/pwmfan-go/settings"
-
 	rpio "github.com/stianeikeland/go-rpio/v4"
 )
 
@@ -35,9 +35,11 @@ func main() {
 	rpio.StartPwm()
 
 	for {
-		runFan, dutyLength := fan.MonitorCpuTemp(config)
+		runFan, dutyLength, cTemp := fan.MonitorCpuTemp(config)
+		fmt.Printf("CPU Temperature: %2.3f\n", cTemp)
 		if runFan {
 			pin.DutyCycleWithPwmMode(dutyLength, 4, true)
+			fmt.Printf("Running fan at %v/4 power\n", dutyLength)
 		} else {
 			pin.DutyCycle(0, 0)
 		}
