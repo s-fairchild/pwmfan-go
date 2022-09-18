@@ -35,7 +35,7 @@ func main() {
 	rpio.StartPwm()
 
 	for {
-		runFan, dutyLength, cTemp := fan.MonitorCpuTemp(config)
+		runFan, dutyLength, cTemp := fan.MonitorCpuTemp(&config)
 		fmt.Printf("CPU Temperature: %2.3f\n", cTemp)
 		if runFan {
 			pin.DutyCycleWithPwmMode(dutyLength, 4, true)

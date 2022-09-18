@@ -26,7 +26,7 @@ const sysTemperatureFile = "/sys/class/thermal/thermal_zone0/temp"
 // dutylength 3 = 3/4 power or 75%
 //
 // dutylength 4 = 4/4 power or 100%
-func MonitorCpuTemp(c settings.Configuration) (bool, uint32, float64) {
+func MonitorCpuTemp(c *settings.Configuration) (bool, uint32, float64) {
 
 	const defaultSleepTime = 2
 
